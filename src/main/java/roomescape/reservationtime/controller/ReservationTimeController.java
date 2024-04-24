@@ -26,17 +26,13 @@ public class ReservationTimeController {
 
     @PostMapping
     public ResponseEntity<Void> createReservationTime(@RequestBody final CreateReservationTimeRequest createReservationTimeRequest) {
-        Long id = reservationTimeService.createReservationTime(createReservationTimeRequest.toDomain());
+        Long id = reservationTimeService.createReservationTime(createReservationTimeRequest);
         return ResponseEntity.created(URI.create("/times/" + id)).build();
     }
 
     @GetMapping
     public ResponseEntity<List<FindReservationTimeResponse>> getReservationTimes() {
-        List<FindReservationTimeResponse> reservationTimeResponses = reservationTimeService.getReservationTimes().entrySet().stream()
-                .map(FindReservationTimeResponse::of)
-                .toList();
-
-        return ResponseEntity.ok(reservationTimeResponses);
+        return ResponseEntity.ok(reservationTimeService.getReservationTimes());
     }
 
     @DeleteMapping("/{id}")

@@ -1,14 +1,13 @@
 package roomescape.reservation.controller.response;
 
-import java.util.Map.Entry;
-import roomescape.reservationtime.domain.ReservationTimeDomain;
+import roomescape.reservationtime.repository.ReservationTimeEntity;
 import roomescape.util.CustomDateTimeFormatter;
 
 public record FindTimeOfReservationsResponse(Long id, String startAt) {
-    public static FindTimeOfReservationsResponse of(final Entry<Long, ReservationTimeDomain> reservationTimeDomainEntry) {
+    public static FindTimeOfReservationsResponse of(final ReservationTimeEntity reservationTimeDomainEntry) {
         return new FindTimeOfReservationsResponse(
-                reservationTimeDomainEntry.getKey(),
-                CustomDateTimeFormatter.getFormattedTime(reservationTimeDomainEntry.getValue().getTime())
+                reservationTimeDomainEntry.getId(),
+                CustomDateTimeFormatter.getFormattedTime(reservationTimeDomainEntry.getTime())
         );
     }
 }

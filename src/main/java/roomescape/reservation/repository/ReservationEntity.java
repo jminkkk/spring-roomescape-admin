@@ -21,7 +21,7 @@ public class ReservationEntity {
         return new ReservationEntity(
                 null,
                 reservationDomain.getName().getValue(),
-                reservationDomain.getDate().getValue(), // TODO: 괜춘??
+                reservationDomain.getDate().getValue(),
                 timeId
         );
     }
@@ -42,7 +42,6 @@ public class ReservationEntity {
         return timeId;
     }
 
-    // TODO
     public ReservationDomain toDomain(final ReservationTimeDomain reservationTimeDomain) {
         return new ReservationDomain(name, date, reservationTimeDomain.getTime());
     }

@@ -1,17 +1,16 @@
 package roomescape.reservation.controller.response;
 
 import java.time.LocalDate;
-import java.util.Map.Entry;
-import roomescape.reservation.domain.ReservationDomain;
-import roomescape.reservationtime.domain.ReservationTimeDomain;
+import roomescape.reservation.repository.ReservationEntity;
+import roomescape.reservationtime.repository.ReservationTimeEntity;
 
 public record FindReservationResponse(Long id, String name, LocalDate date, FindTimeOfReservationsResponse time) {
-    public static FindReservationResponse of(final Entry<Long, ReservationDomain> reservationEntry,
-                                             final Entry<Long, ReservationTimeDomain> reservatinoTimeEntry) {
+    public static FindReservationResponse of(final ReservationEntity reservationEntry,
+                                             final ReservationTimeEntity reservationTimeEntry) {
         return new FindReservationResponse(
-                reservationEntry.getKey(),
-                reservationEntry.getValue().getName().getValue(),
-                reservationEntry.getValue().getDate().getValue(),
-                FindTimeOfReservationsResponse.of(reservatinoTimeEntry));
+                reservationEntry.getId(),
+                reservationEntry.getName(),
+                reservationEntry.getDate(),
+                FindTimeOfReservationsResponse.of(reservationTimeEntry));
     }
 }
