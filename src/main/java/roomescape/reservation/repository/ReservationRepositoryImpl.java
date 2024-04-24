@@ -2,14 +2,14 @@ package roomescape.reservation.repository;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import roomescape.reservation.domain.Reservation;
+import roomescape.reservationtime.repository.ReservationTimeEntity;
 
 @Repository
 public class ReservationRepositoryImpl implements ReservationRepository {
@@ -20,42 +20,48 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private final RowMapper<Reservation> reservationRowMapper =
-            (resultSet, rowNum) -> new Reservation(
-                    resultSet.getLong("id"),
-                    resultSet.getString("name"),
-                    resultSet.getDate("date").toLocalDate(),
-                    resultSet.getLong("id"),
-                    resultSet.getTime("start_at").toLocalTime()
-            );
-
     @Override
-    public List<Reservation> findAll() {
+    public Map<ReservationEntity, ReservationTimeEntity> findAll() {
         String sql = """
-                select r.id, r.name, r.date, t.id, t.start_at 
+                select r.id, r.name, r.date, t.id as time_id, t.start_at
                 from reservation as r 
                 inner join reservation_time as t 
                 on r.time_id = t.id
                 """;
-        return jdbcTemplate.query(sql, reservationRowMapper);
+        Map<ReservationEntity, ReservationTimeEntity> result = new HashMap<>();
+        jdbcTemplate.query(sql, (resultSet, rowNum) -> {
+            ReservationEntity reservation = new ReservationEntity(
+                    resultSet.getLong("id"),
+                    resultSet.getString("name"),
+                    resultSet.getDate("date").toLocalDate(),
+                    resultSet.getLong("time_id")
+            );
+            ReservationTimeEntity time = new ReservationTimeEntity(
+                    resultSet.getLong("time_id"),
+                    resultSet.getTime("start_at").toLocalTime()
+            );
+            result.put(reservation, time);
+            return result.entrySet().stream().iterator().next();
+        });
+        return result;
     }
 
     @Override
-    public Reservation findById(final Long id) {
+    public ReservationEntity findById(final Long id) {
         String sql = "select * from reservation where id = ?";
-        return jdbcTemplate.queryForObject(sql, Reservation.class, id);
+        return jdbcTemplate.queryForObject(sql, ReservationEntity.class, id);
     }
 
     @Override
-    public Long save(final Reservation reservation) {
+    public Long save(final ReservationEntity reservationEntity) {
         String sql = "insert into reservation (name, date, time_id) values (?, ?, ?)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         PreparedStatementCreator preparedStatementCreator = connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[]{"id"});
-            ps.setString(1, reservation.getName().getValue());
-            ps.setDate(2, Date.valueOf(reservation.getDate().getValue()));
-            ps.setLong(3, reservation.getReservationTime().getId());
+            ps.setString(1, reservationEntity.getName());
+            ps.setDate(2, Date.valueOf(reservationEntity.getDate()));
+            ps.setLong(3, reservationEntity.getTimeId());
             return ps;
         };
 

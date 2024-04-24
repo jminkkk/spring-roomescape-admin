@@ -2,6 +2,8 @@ package roomescape.reservation.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,42 +14,48 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import roomescape.reservation.controller.request.CreateReservationRequest;
 import roomescape.reservation.controller.response.FindReservationResponse;
-import roomescape.reservation.repository.ReservationRepository;
-import roomescape.reservationtime.domain.ReservationTime;
-import roomescape.reservationtime.repository.ReservationTimeRepository;
+import roomescape.reservation.domain.ReservationDomain;
+import roomescape.reservation.service.ReservationService;
+import roomescape.reservationtime.domain.ReservationTimeDomain;
+import roomescape.reservationtime.service.ReservationTimeService;
 
 @RestController
 @RequestMapping("/reservations")
 public class ReservationController {
 
-    private final ReservationRepository reservationRepository;
-    private final ReservationTimeRepository reservationTimeRepository;
+    private final ReservationService reservationService;
+    private final ReservationTimeService reservationTimeService;
 
-    public ReservationController(final ReservationRepository reservationRepository,
-                                 final ReservationTimeRepository reservationTimeRepository) {
-        this.reservationRepository = reservationRepository;
-        this.reservationTimeRepository = reservationTimeRepository;
+    public ReservationController(final ReservationService reservationService,
+                                 final ReservationTimeService reservationTimeService) {
+        this.reservationService = reservationService;
+        this.reservationTimeService = reservationTimeService;
     }
 
     @GetMapping
     public ResponseEntity<List<FindReservationResponse>> getReservations() {
-        List<FindReservationResponse> reservationResponses = reservationRepository.findAll().stream()
-                .map(FindReservationResponse::of)
+        Map<Entry<Long, ReservationDomain>, Entry<Long, ReservationTimeDomain>> reservations = reservationService.getReservations();
+        List<FindReservationResponse> findReservationResponses = reservations.entrySet().stream()
+                .map(entry -> FindReservationResponse.of(entry.getKey(), entry.getValue()))
                 .toList();
-        return ResponseEntity.ok(reservationResponses);
+        return ResponseEntity.ok(findReservationResponses);
     }
 
     @PostMapping
     public ResponseEntity<Void> createReservation(
             @RequestBody CreateReservationRequest createReservationRequest) {
-        ReservationTime reservationTime = reservationTimeRepository.findById(createReservationRequest.timeId());
-        Long id = reservationRepository.save(createReservationRequest.toDomain(reservationTime));
-        return ResponseEntity.created(URI.create("/reservations/" + id)).build();
+        // TODO: Controller -> 한개의 Service, // Service에서 다른 Service
+        ReservationTimeDomain reservationTimeDomain = reservationTimeService.getReservationTime(
+                createReservationRequest.timeId());
+        Long reservationId = reservationService.createReservation(
+                createReservationRequest.toDomain(reservationTimeDomain), createReservationRequest.timeId());
+        return ResponseEntity.created(URI.create(
+                "/reservations/" + reservationId)).build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
-        reservationRepository.deleteById(id);
+        reservationService.deleteReservation(id);
         return ResponseEntity.noContent().build();
     }
 }

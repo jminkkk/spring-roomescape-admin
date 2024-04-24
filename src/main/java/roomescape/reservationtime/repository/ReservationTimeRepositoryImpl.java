@@ -9,7 +9,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import roomescape.reservationtime.domain.ReservationTime;
 
 @Repository
 public class ReservationTimeRepositoryImpl implements ReservationTimeRepository {
@@ -20,18 +19,18 @@ public class ReservationTimeRepositoryImpl implements ReservationTimeRepository 
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private final RowMapper<ReservationTime> reservationTimeRowMapper =
-            (resultSet, rowNum) -> new ReservationTime(
+    private final RowMapper<ReservationTimeEntity> reservationTimeRowMapper =
+            (resultSet, rowNum) -> new ReservationTimeEntity(
                     resultSet.getLong("id"),
                     resultSet.getTime("start_at").toLocalTime()
             );
 
-    public Long save(final ReservationTime reservationTime) {
+    public Long save(final ReservationTimeEntity reservationTimeEntity) {
         String sql = "insert into reservation_time (start_at) values (?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         PreparedStatementCreator preparedStatementCreator = connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[]{"id"});
-            ps.setTime(1, Time.valueOf(reservationTime.getTime()));
+            ps.setTime(1, Time.valueOf(reservationTimeEntity.getTime()));
             return ps;
         };
 
@@ -40,7 +39,7 @@ public class ReservationTimeRepositoryImpl implements ReservationTimeRepository 
     }
 
     @Override
-    public List<ReservationTime> findAll() {
+    public List<ReservationTimeEntity> findAll() {
         String sql = "select id, start_at from reservation_time";
         return jdbcTemplate.query(sql, reservationTimeRowMapper);
     }
@@ -52,7 +51,7 @@ public class ReservationTimeRepositoryImpl implements ReservationTimeRepository 
     }
 
     @Override
-    public ReservationTime findById(final Long timeId) {
+    public ReservationTimeEntity findById(final Long timeId) {
         String sql = "select id, start_at from reservation_time where id = ?";
         return jdbcTemplate.queryForObject(sql, reservationTimeRowMapper, timeId);
     }

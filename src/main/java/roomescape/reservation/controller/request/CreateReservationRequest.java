@@ -1,17 +1,15 @@
 package roomescape.reservation.controller.request;
 
 import java.time.LocalDate;
-import roomescape.reservation.domain.Reservation;
-import roomescape.reservationtime.domain.ReservationTime;
+import roomescape.reservation.domain.ReservationDomain;
+import roomescape.reservationtime.domain.ReservationTimeDomain;
 
 public record CreateReservationRequest(LocalDate date, String name, Long timeId) {
 
-    public Reservation toDomain(final ReservationTime reservationTime) {
-        return new Reservation(
-                null,
+    public ReservationDomain toDomain(final ReservationTimeDomain reservationTime) {
+        return new ReservationDomain(
                 this.name,
                 this.date,
-                reservationTime.getId(),
                 reservationTime.getTime()
         );
     }
